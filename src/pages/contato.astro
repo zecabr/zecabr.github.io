@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+---
+
+<BaseLayout
+  title="Contato — Zeca"
+  description="Mande mensagem: MCP em .NET, agentes em enterprise, Design System interno ou event-driven. Email, LinkedIn e GitHub."
+  path="/contato/"
+>
+  <main class="site">
+    <SiteHeader />
+
+    <article>
+      <p class="eyebrow">Contato</p>
+      <h1>Vamos conversar</h1>
+      <p class="lede">
+        Se você está desenhando algo em MCP, agentes de IA em enterprise, Design System interno ou event-driven em .NET —
+        mande mensagem. Respondo em português ou inglês.
+      </p>
+
+      <ul class="contact-list">
+        <li><strong>Email</strong> — <a href="mailto:zecaoliveirabr85@gmail.com">zecaoliveirabr85@gmail.com</a></li>
+        <li><strong>LinkedIn</strong> — <a href="https://linkedin.com/in/…">linkedin.com/in/…</a></li>
+        <li><strong>GitHub</strong> — <a href="https://github.com/zecabr">github.com/zecabr</a></li>
+      </ul>
+    </article>
+
+    <SiteFooter />
+  </main>
+</BaseLayout>
+
+<style>
+  .contact-list {
+    list-style: none;
+    padding: 0;
+    max-width: var(--measure);
+  }
+
+  .contact-list li {
+    margin-bottom: var(--space-sm);
+    font-size: var(--step-0);
+  }
+</style>

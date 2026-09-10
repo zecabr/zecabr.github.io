@@ -1,0 +1,54 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+---
+
+<BaseLayout
+  title="Sobre — Zeca"
+  description="Como Zeca trabalha: 12 anos em .NET, foco em plataformas de IA aplicada, MCP, agentes e DevEx. Filosofia: decisão antes do código, escopo pequeno, trade-off em ADR público."
+  path="/sobre/"
+>
+  <main class="site">
+    <SiteHeader />
+
+    <article>
+      <p class="eyebrow">Sobre</p>
+      <h1>Como trabalho</h1>
+      <p class="lede">
+        Arquiteto de software com 12 anos construindo sistemas .NET. Hoje trabalho onde arquitetura clássica encontra IA em produção.
+      </p>
+
+      <h2>Trajetória</h2>
+      <p>
+        Comecei como dev .NET há 12 anos e nunca deixei de codar. Nos últimos anos migrei o foco para o que o mercado hoje chama de <em>AI Engineering</em> —
+        agentes em produção, integração via MCP, plataformas internas de agentes, extensões de IDE que automatizam trabalho real de dev.
+      </p>
+      <p>
+        Sigo em .NET porque é onde tenho densidade real de anos, e porque é justamente o ecossistema mais órfão de framework decente pra MCP e agentes.
+        Fico feliz em ser a ponte entre essas duas comunidades — o mundo enterprise .NET e o mundo Python/TypeScript que hoje domina IA aplicada.
+      </p>
+
+      <h2>Filosofia</h2>
+      <p>
+        <strong>Escrever a decisão antes do código.</strong> Todo projeto meu abre com uma issue de <em>Design v0</em> descrevendo a arquitetura em C4 e as escolhas em ADRs
+        no formato Michael Nygard. Se um projeto meu não tem <code>docs/adr/</code>, não deveria estar em produção.
+      </p>
+      <p>
+        <strong>Escopo pequeno em cada release.</strong> Prefiro um v0.1 defensável a um v1.0 aspiracional. O que não cabe hoje vai pro backlog público — não pro escopo em silêncio.
+      </p>
+      <p>
+        <strong>LLM como parte séria de um sistema, não como demo.</strong> Um agente em produção sem trace estruturado, eval sistemático e cost cap não é um agente —
+        é uma promessa vazando dinheiro.
+      </p>
+
+      <h2>Como colaborar</h2>
+      <p>
+        Se você está desenhando algo em <strong>MCP em .NET</strong>, <strong>agentes de IA em enterprise</strong>, ou <strong>Design System interno</strong>, mande mensagem —
+        adoro conversar sobre trade-off real que você está enfrentando. <a href="/contato/">Contatos aqui</a>.
+      </p>
+    </article>
+
+    <SiteFooter />
+  </main>
+</BaseLayout>

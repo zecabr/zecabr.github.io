@@ -1,0 +1,92 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+---
+
+<BaseLayout
+  title="Zeca — Arquiteto de plataformas de IA aplicada"
+  path="/"
+>
+  <main class="site">
+    <SiteHeader />
+
+    <article>
+      <p class="eyebrow">Arquiteto de software</p>
+      <h1>Zeca</h1>
+      <p class="lede">
+        Plataformas de IA aplicada · 12 anos em .NET · MCP, agentes, DevEx.
+      </p>
+
+      <p>
+        Trabalho onde arquitetura clássica encontra IA em produção — agentes, MCP, evals, guardrails, tracing.
+        Meu ponto ótimo é fazer LLM rodar como parte séria de um sistema, não como demo.
+      </p>
+
+      <hr />
+
+      <h2>Projetos em destaque</h2>
+      <ul class="project-list">
+        <li>
+          <a href="https://github.com/zecabr/agent-forge" class="project-name">agent-forge</a>
+          <p>
+            Orquestrador multi-agente MCP-first, em .NET.
+            Uma opinião concreta sobre como um agent framework deve parecer no mundo enterprise .NET.
+          </p>
+        </li>
+        <li>
+          <a href="https://github.com/zecabr/event-spine" class="project-name">event-spine</a>
+          <p>
+            Backbone de eventos com outbox, DLQ e projeções.
+            Referência dos padrões clássicos de sistemas distribuídos em .NET 9.
+          </p>
+        </li>
+      </ul>
+
+      <hr />
+
+      <h2>Notas recentes</h2>
+      <p class="muted">
+        <em>Primeiro artigo publicado na Semana 5 do sprint.</em>
+        Enquanto isso, acompanhe no <a href="https://github.com/zecabr">GitHub</a>
+        ou no <a href="https://linkedin.com/in/…">LinkedIn</a>.
+      </p>
+
+      <hr />
+
+      <h2>Trabalho na IOB</h2>
+      <p>
+        Sou desenvolvedor na IOB Cloud, onde meu escopo é a interseção entre plataforma, IA aplicada e experiência de desenvolvedor:
+        agentes em produção, extensões de IDE, Design System interno, e frameworks de tooling que escalam boas práticas por múltiplos times.
+        <a href="/sobre/">Mais sobre como trabalho →</a>
+      </p>
+    </article>
+
+    <SiteFooter />
+  </main>
+</BaseLayout>
+
+<style>
+  .project-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-lg);
+    max-width: var(--measure);
+  }
+
+  .project-list li + li {
+    margin-top: var(--space-lg);
+  }
+
+  .project-name {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: var(--space-xs);
+  }
+
+  .project-list p {
+    margin: 0;
+  }
+</style>

@@ -1,0 +1,71 @@
+---
+const nav = [
+  { href: '/', label: 'Início' },
+  { href: '/sobre/', label: 'Sobre' },
+  { href: '/projetos/', label: 'Projetos' },
+  { href: '/notas/', label: 'Notas' },
+  { href: '/contato/', label: 'Contato' },
+];
+
+const currentPath = Astro.url.pathname;
+---
+
+<header class="site-header">
+  <a href="/" class="site-brand" aria-label="Página inicial">Zeca</a>
+  <nav class="site-nav" aria-label="Navegação principal">
+    {nav.map(item => (
+      <a
+        href={item.href}
+        aria-current={currentPath === item.href ? 'page' : undefined}
+      >
+        {item.label}
+      </a>
+    ))}
+  </nav>
+</header>
+
+<style>
+  .site-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-md);
+    padding-bottom: var(--space-lg);
+    margin-bottom: var(--space-xl);
+    border-bottom: 1px solid var(--color-border);
+    flex-wrap: wrap;
+  }
+
+  .site-brand {
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--color-text);
+  }
+
+  .site-nav {
+    display: flex;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    font-size: var(--step--1);
+  }
+
+  .site-nav a {
+    text-decoration: none;
+    color: var(--color-text-muted);
+    transition: color 0.15s ease;
+  }
+
+  .site-nav a:hover {
+    color: var(--color-text);
+  }
+
+  .site-nav a[aria-current="page"] {
+    color: var(--color-text);
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent-arch);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+</style>

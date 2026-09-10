@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+---
+
+<BaseLayout
+  title="Notas — Zeca"
+  description="Escrita técnica sobre MCP em .NET, arquitetura de agentes, event-driven, DevEx e o que os tutoriais deixam de fora."
+  path="/notas/"
+>
+  <main class="site">
+    <SiteHeader />
+
+    <article>
+      <p class="eyebrow">Notas</p>
+      <h1>Escrita técnica</h1>
+      <p class="lede">
+        Ensaios sobre MCP em .NET, arquitetura de agentes, event-driven, DevEx e o que os tutoriais deixam de fora.
+      </p>
+
+      <p class="muted">
+        <em>O primeiro artigo sai junto com a release <code>v0.1</code> do <a href="/projetos/">agent-forge</a> —
+        planejado para a Semana 5 do sprint atual.</em>
+      </p>
+
+      <p>
+        Enquanto isso, acompanhe no <a href="https://github.com/zecabr">GitHub</a>
+        ou no <a href="https://linkedin.com/in/…">LinkedIn</a>.
+      </p>
+    </article>
+
+    <SiteFooter />
+  </main>
+</BaseLayout>

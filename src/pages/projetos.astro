@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+---
+
+<BaseLayout
+  title="Projetos — Zeca"
+  description="Projetos-âncora do Zeca: agent-forge (orquestrador MCP-first em .NET) e event-spine (backbone event-driven com outbox, DLQ e projeções em .NET 9)."
+  path="/projetos/"
+>
+  <main class="site">
+    <SiteHeader />
+
+    <article>
+      <p class="eyebrow">Projetos</p>
+      <h1>O que estou construindo</h1>
+      <p class="lede">
+        Dois projetos-âncora, ambos em .NET 9. Um mira a interseção entre agentes e MCP no mundo enterprise; o outro é referência de padrões clássicos de sistemas distribuídos.
+      </p>
+
+      <h2>agent-forge</h2>
+      <p><strong>Orquestrador multi-agente MCP-first, em .NET.</strong></p>
+      <p>
+        Um framework enxuto para desenhar, rodar e avaliar agentes conectados via MCP — com observabilidade e guardrails embutidos.
+        Construído em .NET num ecossistema onde MCP ainda é território pouco batido: uma opinião concreta sobre como um agent framework MCP-first deve parecer no mundo enterprise.
+      </p>
+      <p>
+        Foco em <em>capabilities compostas via MCP</em>, evals rodando no CI, tracing via OpenTelemetry e um cost cap por sessão.
+      </p>
+      <p>→ <a href="https://github.com/zecabr/agent-forge">github.com/zecabr/agent-forge</a></p>
+
+      <hr />
+
+      <h2>event-spine</h2>
+      <p><strong>Backbone de eventos com outbox, DLQ e projeções — referência em .NET 9.</strong></p>
+      <p>
+        Implementação limpa dos padrões clássicos de arquitetura event-driven: outbox transacional em Postgres, idempotência por chave,
+        DLQ observável com dashboard mínimo, e projeções materializadas.
+        Não substitui Kafka em produção — é referência de <em>padrão</em>, com decisões documentadas em ADR e runbook operacional.
+      </p>
+      <p>→ <a href="https://github.com/zecabr/event-spine">github.com/zecabr/event-spine</a></p>
+
+      <hr />
+
+      <h2>Trabalho interno na IOB</h2>
+      <p>
+        Boa parte do meu escopo hoje vive dentro da IOB Cloud e por ora não é citado nominalmente aqui:
+        plataforma interna de agentes de IA em produção, extensão de IDE que automatiza geração de código a partir de tickets,
+        Design System interno com biblioteca React, e framework de plugins de dev que escala boas práticas por toda a organização de engenharia.
+      </p>
+      <p class="muted">
+        Cada uma dessas iniciativas é técnica e cotidiana — o conteúdo público aqui prioriza o que posso mostrar em código: os dois projetos-âncora acima.
+      </p>
+    </article>
+
+    <SiteFooter />
+  </main>
+</BaseLayout>
