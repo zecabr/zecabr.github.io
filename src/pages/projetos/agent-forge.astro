@@ -1,0 +1,139 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+---
+
+<BaseLayout
+  title="agent-forge — Zeca"
+  description="agent-forge: orquestrador multi-agente MCP-first em .NET 9. Framework enxuto pra desenhar, rodar e avaliar agentes conectados via MCP — com evals, tracing e guardrails embutidos. Projeto-âncora do portfólio, v0.1.0-preview.2 no ar."
+  path="/projetos/agent-forge/"
+>
+  <main class="site">
+    <SiteHeader />
+
+    <article>
+      <p class="eyebrow">Projeto · IA aplicada</p>
+      <h1>agent-forge</h1>
+      <p class="lede">
+        Orquestrador multi-agente MCP-first, em .NET 9. Uma opinião concreta sobre como um agent framework deve parecer no mundo enterprise — construído no ecossistema onde MCP ainda é território pouco batido.
+      </p>
+
+      <p class="status">
+        <strong>Status:</strong>
+        <a href="https://github.com/zecabr/agent-forge/releases/tag/v0.1.0-preview.2">v0.1.0-preview.2</a>
+        publicada em 11/09/2026 · 12 projetos na solution · 63+ testes verdes · 2 providers reais (Anthropic + Gemini) validados end-to-end.
+      </p>
+
+      <h2>Por que existe</h2>
+      <p>
+        Times que estão adotando agentes hoje montam orquestração de forma ad-hoc: sem eval sistemático, sem trace estruturado, sem forma clara de compor <em>tools</em> como capabilities MCP. E o ecossistema MCP hoje é dominado por Python e TypeScript — os SDKs oficiais são só nessas duas linguagens. Empresas enterprise, majoritariamente .NET, ficam órfãs de framework de referência.
+      </p>
+      <p>
+        <code>agent-forge</code> não pretende ser universal. É a tradução do padrão MCP para o idioma .NET, com escopo pequeno e opinado: agent loop ReAct, providers plugáveis, tools expostas como capabilities MCP, evals rodando no CI, tracing via <code>ActivitySource</code>, e três guardrails ligados por padrão (prompt-injection, PII, cost cap).
+      </p>
+
+      <h2>O que a v0.1 faz</h2>
+      <p>
+        Uma linha por peça — cada uma com testes e ADR quando envolveu decisão não-trivial.
+      </p>
+
+      <ul>
+        <li><strong>Agent loop ReAct</strong> em <code>AgentForge.Core</code>: <code>AgentSession</code> conduzindo tool calls até um dos 5 outcomes (completed, budget-exceeded, guardrail-blocked, provider-error, tool-error).</li>
+        <li><strong>Providers reais:</strong> <code>AnthropicChatProvider</code> contra Messages API (com suporte a <code>anthropic-workspace-id</code> pra org-level keys) e <code>GeminiChatProvider</code> contra Generative Language API (com aliases <code>-latest</code> pra sobreviver a deprecações de modelo).</li>
+        <li><strong>MCP host custom</strong> em <code>AgentForge.Mcp</code>: <code>StdioTransport</code> falando JSON-RPC 2.0 line-framed contra servidores MCP, agregando múltiplos servers e roteando por tool name.</li>
+        <li><strong>Três guardrails</strong> em <code>AgentForge.Guardrails</code>: prompt-injection regex EN+PT, PII scrub com 6 kinds (email, CPF, CNPJ, telefone-BR, SSN, cartão) e cost cap por sessão.</li>
+        <li><strong>Tracing</strong> em <code>AgentForge.Observability</code>: <code>OpenTelemetryTracer</code> sobre <code>System.Diagnostics.ActivitySource</code>, sem exporter embutido — a app hospedeira decide se manda pra OTLP, Jaeger, Application Insights.</li>
+        <li><strong>Eval suite</strong> em <code>AgentForge.Evals</code>: <code>LlmJudge</code> com prompt JSON estrito, <code>EvalRunner</code> com budget cap, casos de teste rodáveis no xUnit e no CI.</li>
+        <li><strong>Sample CLI:</strong> REPL multi-provider (<code>AGENT_FORGE_PROVIDER=anthropic|gemini</code>) que amarra tudo — chat + guardrails + tracing + budget, sem MCP no v0.1 (fica pro v0.2).</li>
+      </ul>
+
+      <h2>Decisões documentadas</h2>
+      <p>
+        Três ADRs no formato Nygard (contexto → decisão → consequências) — as escolhas que precisariam ser justificadas em qualquer code review de par sênior:
+      </p>
+      <ul>
+        <li><a href="https://github.com/zecabr/agent-forge/blob/main/docs/adr/001-mcp-em-dotnet.md"><strong>ADR-001</strong> — MCP em .NET</a>: por que custom stdio JSON-RPC no v0.1 ao invés de esperar o SDK oficial estabilizar.</li>
+        <li><a href="https://github.com/zecabr/agent-forge/blob/main/docs/adr/002-eval-stack.md"><strong>ADR-002</strong> — Stack de evals</a>: LLM-as-judge caseiro sobre xUnit ao invés de framework externo (Ragas, DeepEval).</li>
+        <li><a href="https://github.com/zecabr/agent-forge/blob/main/docs/adr/003-tracing.md"><strong>ADR-003</strong> — Tracing</a>: <code>ActivitySource</code> built-in, sem exporter embutido — quem hospeda decide.</li>
+      </ul>
+
+      <h2>Quick start</h2>
+      <p>Cinco comandos entre <code>git clone</code> e o primeiro turno de agente com Gemini free tier:</p>
+
+      <pre><code>git clone https://github.com/zecabr/agent-forge
+cd agent-forge
+dotnet build
+$env:AGENT_FORGE_PROVIDER = "gemini"; $env:GEMINI_API_KEY = "..."
+dotnet run --project samples/AgentForge.Samples.Cli</code></pre>
+
+      <p>
+        Free tier do AI Studio dá 60 req/min no <code>gemini-flash-lite-latest</code> — suficiente pra brincar sem cobrança. Pra usar Anthropic, troca <code>AGENT_FORGE_PROVIDER</code> pra <code>anthropic</code> e define <code>ANTHROPIC_API_KEY</code>.
+      </p>
+
+      <h2>O que ainda não é</h2>
+      <p>
+        Uma release preview não é uma promessa. Três coisas ficaram deliberadamente fora do v0.1:
+      </p>
+      <ul>
+        <li><strong>Sample CLI não pluga MCP</strong> — só chat. O <code>McpHost</code> existe e é testado com <code>FakeMcpTransport</code>, mas amarrar servidores MCP reais no REPL fica pro v0.2.</li>
+        <li><strong>Sem política de retry</strong> pra 503/429 transientes. Gemini deu 503 no meio dos testes — resolveu sozinho no minuto seguinte, mas uma app séria precisa de retry com backoff. Fica pro v0.2 (será ADR-004).</li>
+        <li><strong>Sem exporter OTLP embutido</strong> no tracer. Emite <code>Activity</code>, mas ligar exporter é responsabilidade da app hospedeira — decisão explicada no ADR-003.</li>
+      </ul>
+
+      <p>
+        A régua do v0.1 foi: <em>escopo pequeno, opinião defensável, código público antes de framework universal.</em> Não é uma corrida contra Semantic Kernel — é uma opinião paralela, MCP-first, para quem tá construindo agentes .NET agora e não pode esperar o mundo Python descer pra cá.
+      </p>
+
+      <h2>Links</h2>
+      <ul>
+        <li>Repositório: <a href="https://github.com/zecabr/agent-forge">github.com/zecabr/agent-forge</a></li>
+        <li>Release atual: <a href="https://github.com/zecabr/agent-forge/releases/tag/v0.1.0-preview.2">v0.1.0-preview.2</a></li>
+        <li>Arquitetura (C4): <a href="https://github.com/zecabr/agent-forge/blob/main/docs/architecture.md">docs/architecture.md</a></li>
+        <li>README executivo: <a href="https://github.com/zecabr/agent-forge/blob/main/README.md">README.md</a></li>
+      </ul>
+
+      <p class="muted">
+        Artigo técnico associado (<em>"MCP em .NET — por que o mundo enterprise não pode ficar de fora"</em>) sai em <a href="/notas/">/notas</a> na semana de 15/09.
+      </p>
+    </article>
+
+    <SiteFooter />
+  </main>
+</BaseLayout>
+
+<style>
+  .status {
+    font-size: var(--step--1);
+    color: var(--color-text-muted);
+    padding: var(--space-sm) var(--space-md);
+    border-left: 2px solid var(--color-accent-ai);
+    background: var(--color-bg-elev);
+    border-radius: var(--radius);
+    margin-bottom: var(--space-lg);
+  }
+
+  .status strong {
+    color: var(--color-text);
+    font-weight: 600;
+  }
+
+  pre {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    line-height: 1.5;
+    background: var(--color-bg-elev);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: var(--space-sm) var(--space-md);
+    overflow-x: auto;
+    margin: 0 0 var(--space-md);
+  }
+
+  pre code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font-size: inherit;
+  }
+</style>
