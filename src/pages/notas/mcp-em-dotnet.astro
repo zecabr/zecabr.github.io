@@ -1,0 +1,288 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+
+const publishedAt = '2026-09-11';
+---
+
+<BaseLayout
+  title="MCP em .NET, seis meses depois — Zeca"
+  description="Setembro de 2026: MCP C# SDK v2.0 e Microsoft Agent Framework 1.0 já estão no ar. Por que construí um agent framework paralelo mesmo assim, o que ele defende, e onde o MAF é a escolha certa."
+  path="/notas/mcp-em-dotnet/"
+>
+  <main class="site">
+    <SiteHeader />
+
+    <article>
+      <p class="eyebrow">Nota técnica · Agentes · MCP · .NET</p>
+      <h1>MCP em .NET, seis meses depois</h1>
+      <p class="lede">
+        Por que construí um agent framework opinado quando o Microsoft Agent Framework 1.0 já está no ar há seis meses — e onde ele é a escolha certa.
+      </p>
+
+      <p class="meta">
+        <time datetime={publishedAt}>11 de setembro de 2026</time> · leitura: ~10 min
+      </p>
+
+      <p>
+        Se você me perguntasse em janeiro de 2026 <em>"qual é o framework MCP-first pra .NET?"</em>, minha resposta seria: <em>não existe.</em> Você juntava o SDK Python ou TypeScript, torcia pra alguém rodar dentro do runtime .NET, ou implementava tudo do zero contra o protocolo. O ecossistema de agentes era Python. .NET olhava de fora.
+      </p>
+
+      <p>
+        Isso mudou. Duas vezes.
+      </p>
+
+      <h2>Setembro de 2026 em uma frase</h2>
+
+      <p>
+        Em <strong>3 de abril</strong> a Microsoft anunciou o <a href="https://devblogs.microsoft.com/dotnet/introducing-microsoft-agent-framework/">Microsoft Agent Framework 1.0</a> — a unificação de Semantic Kernel Agents com AutoGen sob um único pacote, <code>Microsoft.Agents.AI</code>, com implementação simétrica em .NET e Python. MCP nativo, seis providers no v1.0 (Azure OpenAI, OpenAI, Anthropic, Bedrock, Gemini, Ollama), workflow engine, A2A protocol pra coordenação entre agentes, OpenTelemetry integrado.
+      </p>
+
+      <p>
+        Em <strong>28 de julho</strong>, a Microsoft e o time do <code>modelcontextprotocol</code> lançaram o <a href="https://devblogs.microsoft.com/dotnet/announcing-v20-of-the-official-mcp-csharp-sdk/">MCP C# SDK v2.0</a>. Stateless por padrão, headers HTTP padronizados pra rotear tráfego MCP sem inspecionar body, multi round-trip requests substituindo o padrão de eventos server-initiated. Suporte oficial da Microsoft, backward-compatible com v1.
+      </p>
+
+      <p>
+        Ou seja: o vácuo virou pista dupla. Enterprise .NET tem, hoje, framework de agentes oficial e SDK MCP oficial. Ambos open source, MIT, mantidos pela empresa que também mantém o runtime.
+      </p>
+
+      <p>
+        E ainda assim eu publiquei, ontem, a <a href="https://github.com/zecabr/agent-forge/releases/tag/v0.1.0-preview.2">v0.1.0-preview.2 do agent-forge</a> — outro agent framework MCP-first em .NET. Sério, opinado, com escopo pequeno. Este texto explica por quê — e o que ele defende que o Microsoft Agent Framework não faz de fábrica.
+      </p>
+
+      <h2>Por que construir mais um framework?</h2>
+
+      <p>
+        Reconhecer primeiro: <strong>não construí pra preencher um vácuo</strong>. Isso teria feito sentido em 2025. Em setembro de 2026, o vácuo não existe mais.
+      </p>
+
+      <p>
+        O que construí é uma <em>opinião paralela</em>. Um framework é a materialização de decisões — o que vem embutido, o que fica fora, o que é opcional. Framework grande atende muita gente porque decide pouco: cada equipe monta a opinião em cima. Framework enxuto atende pouca gente porque decide muito: cada equipe herda a opinião. As duas coisas fazem sentido; são produtos diferentes.
+      </p>
+
+      <p>
+        O Microsoft Agent Framework decide pouco. Isso é acertado — ele precisa servir do dev que roda um agente local ao time que orquestra 200 agentes em Azure com workflow engine. As decisões que restam pra você — <em>como avaliar, o que bloquear, quanto pode gastar, quem observa</em> — são amarradas depois, com libraries de terceiros ou código próprio.
+      </p>
+
+      <p>
+        Três dessas decisões eu quis embutir. Cada uma vale um bloco.
+      </p>
+
+      <h3>1. Eval integrada ao CI, não amarrada depois</h3>
+
+      <p>
+        A Microsoft tem <a href="https://devblogs.microsoft.com/foundry/build-2026-open-trust-stack-ai-agents/">Foundry Open Evals</a> — uma proposta de eval stack aberta, boa, séria. Mas é uma peça separada do MAF. Se você quer <em>"eval rodando no CI, quebrando a build se degradar"</em>, precisa ligar as duas coisas você mesmo, montar dataset em outro formato, orquestrar num pipeline paralelo.
+      </p>
+
+      <p>
+        No agent-forge, eval é <code>Fact</code> do xUnit:
+      </p>
+
+      <pre><code>{`[Fact]
+public async Task Agent_should_answer_grounded_when_docs_are_provided()
+{
+    var runner = new EvalRunner(_agent, _judge, budget: EvalBudget.MaxCost(0.10m));
+    var result = await runner.RunAsync(new EvalCase
+    {
+        Prompt = "Qual é o prazo de retenção do dado X?",
+        ExpectedOutcome = "Resposta cita o artigo Y da política de dados",
+    });
+
+    Assert.True(result.Passed, result.Judgment.Rationale);
+}`}</code></pre>
+
+      <p>
+        A build no GitHub Actions roda esse teste como qualquer outro. Se o judge (que é outro LLM com prompt JSON estrito) reprovar, a PR fica vermelha. O <em>budget</em> — <code>MaxCost(0.10m)</code> — é uma restrição de primeira classe: se o runner ultrapassar, o teste falha com <code>EvalOutcome.BudgetExceeded</code>, não com estouro de crédito na sua conta.
+      </p>
+
+      <p>
+        A opinião: <em>eval é código de teste, não pipeline paralelo.</em> Vive junto do resto, roda com <code>dotnet test</code>, quebra a build. Isso não é possível com framework agnóstico — só cabe num framework que decide onde ela mora.
+      </p>
+
+      <h3>2. Guardrails opinados incluindo formatos brasileiros</h3>
+
+      <p>
+        MAF não vem com guardrail PII embutido. A solução comunitária mais completa hoje é o <a href="https://www.strathweb.com/2026/06/pii-guardrails-for-dotnet-applications-part-2-agent-framework-agents/">AgentGuard</a> do Filip W. — biblioteca séria, bem escrita, com engine offline (TasmanianDevil). Você chama <code>UseAgentGuard()</code> no builder e ganha detecção de PII.
+      </p>
+
+      <p>
+        Duas coisas o AgentGuard não faz — e não deveria fazer, ele é generalista: <strong>não conhece CPF nem CNPJ</strong>. Detectar dados sensíveis brasileiros num agente que atende cliente brasileiro é responsabilidade sua.
+      </p>
+
+      <p>
+        O agent-forge decide o oposto. O <code>PiiDetectionGuardrail</code> vem com seis kinds incluindo CPF, CNPJ e telefone-BR:
+      </p>
+
+      <pre><code>{`var agent = new Agent(provider, tools, guardrails: new IGuardrail[]
+{
+    new PromptInjectionGuardrail(),             // regex PT + EN
+    new PiiDetectionGuardrail(               // out of the box:
+        PiiKind.Email | PiiKind.Cpf | PiiKind.Cnpj |
+        PiiKind.PhoneBr | PiiKind.Ssn | PiiKind.CreditCard),
+    new CostCapGuardrail(maxUsd: 5.00m),
+});`}</code></pre>
+
+      <p>
+        A opinião aqui é geográfica: <em>construo pra clientes brasileiros primeiro; formato BR vem no default, não em pacote extra.</em> Isso é escolha de quem construiu, não de quem consome. Framework agnóstico não pode fazer isso — ofenderia quem não é brasileiro.
+      </p>
+
+      <h3>3. Cost cap como IGuardrail de primeira classe</h3>
+
+      <p>
+        MAF tem cost tracking — você consegue ler quanto gastou. Mas gastar controlado é diferente de gastar rastreado. Um POC que vira agente-que-loopa-infinito consome créditos até você notar. Notificar-por-e-mail é tarde demais.
+      </p>
+
+      <p>
+        No agent-forge, o <code>CostCapGuardrail</code> participa da mesma pipeline dos outros guardrails. Antes de cada turno, ele calcula <code>UsageStats.Add(current, thisTurn)</code> em USD (baseado nas tabelas de <code>AnthropicPricing</code> e <code>GeminiPricing</code>) e, se excedeu, retorna <code>GuardrailResult.Block("cost cap exceeded")</code>. O <code>AgentSession</code> respeita, encerra o loop com <code>AgentOutcome.GuardrailBlocked</code>, devolve o parcial pro chamador.
+      </p>
+
+      <p>
+        Cost cap não é observabilidade — é parada dura. Faz mais sentido como guardrail do que como métrica.
+      </p>
+
+      <h2>Onde o Microsoft Agent Framework é a escolha certa</h2>
+
+      <p>
+        Isso não é um artigo pra convencer você a trocar. Quatro cenários onde MAF ganha:
+      </p>
+
+      <ul>
+        <li>
+          <strong>Multi-runtime.</strong> Time que roda parte em .NET e parte em Python quer a mesma API dos dois lados. MAF fez isso deliberadamente. agent-forge é .NET-only.
+        </li>
+        <li>
+          <strong>Workflow complexo.</strong> Se você precisa de orquestração graph-based com múltiplos agentes, humano-no-loop, aprovações condicionais — MAF tem workflow engine pronto. agent-forge tem loop ReAct e ponto.
+        </li>
+        <li>
+          <strong>Ecossistema Azure/Foundry.</strong> Se você já opera em Azure OpenAI, Foundry, Copilot Studio — MAF pluga natural. agent-forge é agnóstico e HTTP-direto contra APIs.
+        </li>
+        <li>
+          <strong>Time grande, várias equipes.</strong> Framework agnóstico é bom quando cada equipe precisa poder opinar diferente. Framework opinado engessa.
+        </li>
+      </ul>
+
+      <p>
+        Se sua situação é uma dessas quatro, o Microsoft Agent Framework é a escolha certa. Este texto não te convence de outra coisa.
+      </p>
+
+      <h2>Onde agent-forge cabe</h2>
+
+      <p>
+        Público específico:
+      </p>
+
+      <ul>
+        <li>Time .NET puro, sem lock-in Azure, provavelmente rodando em cloud outro que não Microsoft.</li>
+        <li>Quer opinar sobre cada peça — não configurar em YAML, não injetar decorator em pipeline builder.</li>
+        <li>Precisa que a eval rode no mesmo CI dos demais serviços, com o mesmo <code>dotnet test</code>, quebrando a build no mesmo lugar.</li>
+        <li>Regulação brasileira (LGPD) mudou o critério de "PII" — dados sensíveis não são só o que a lei americana chama de PII.</li>
+        <li>Aprecia framework enxuto que cabe na cabeça em uma tarde — 12 projetos na solution, ~5.000 linhas, 3 ADRs curtos explicando as decisões que precisaram ser defendidas.</li>
+      </ul>
+
+      <p>
+        Não é o framework universal. É a opinião de um arquiteto sobre como isso deveria parecer no idioma .NET, publicada em código.
+      </p>
+
+      <h2>Três coisas que aprendi construindo opinião num espaço já ocupado</h2>
+
+      <h3>1. O protocolo é 20% do trabalho</h3>
+
+      <p>
+        MCP como protocolo é elegante: JSON-RPC 2.0, três primitivas (tools/resources/prompts), transports simples. Implementar um <code>StdioTransport</code> line-framed em .NET foi ~200 linhas de código sob controle — não justifica esperar SDK oficial estabilizar.
+      </p>
+
+      <p>
+        O que realmente demora é decidir o resto. Como pipeline de guardrails compõe com tool loop? Onde tracing entra sem virar dependência dura? Como o judge do eval acessa o mesmo provider sem duplicar chave de API? Cada uma dessas decisões é irreversível e vale um ADR — porque em 6 meses ninguém vai lembrar por que ficou assim.
+      </p>
+
+      <p>
+        (Consequência prática: no v0.2 do agent-forge, o <a href="https://github.com/zecabr/agent-forge/blob/main/docs/adr/001-mcp-em-dotnet.md">ADR-001</a> muda de "custom stdio" pra "migrar pro SDK C# v2.0 agora que estabilizou". O trabalho de opinar sobre o resto continua meu.)
+      </p>
+
+      <h3>2. Aliases <code>-latest</code> {'>'} versões numeradas</h3>
+
+      <p>
+        Este eu descobri na dura. Ao amarrar o <code>GeminiChatProvider</code> ao <code>gemini-2.0-flash</code>, quebrou em uma semana — Google deprecou. Troquei pro <code>gemini-3.6-flash</code>, quebrou de novo. Pro <code>gemini-2.5-flash-lite</code>, quebrou de novo. Só parou quando usei o alias <code>gemini-flash-lite-latest</code>.
+      </p>
+
+      <p>
+        O aprendizado: em API de LLM comercial, o número da versão é ilusão de estabilidade. Aliases <code>-latest</code> são a única forma durável — você abre mão de reproduzibilidade em troca de sobreviver. Framework opinado tem que refletir isso no default: o Sample CLI do agent-forge usa <code>gemini-flash-lite-latest</code>, não uma versão específica.
+      </p>
+
+      <h3>3. Framework grande vira ferramenta; framework enxuto é opinião</h3>
+
+      <p>
+        Isso é meta e um pouco político. Framework grande é útil justamente porque decide pouco: cada consumidor projeta a opinião dele em cima. Framework enxuto é útil justamente porque decide muito: quem escolheu ele já concordou com a opinião de fábrica.
+      </p>
+
+      <p>
+        Isso significa que o critério de sucesso é diferente. MAF é bem-sucedido quando milhões de agentes rodam em cima, cada um com sua opinião embutida na aplicação. agent-forge é bem-sucedido quando alguns times .NET escolhem <em>essa</em> opinião como default — e defendem em code review por que ela cabe pra eles.
+      </p>
+
+      <p>
+        E defender em código é o único jeito de descobrir se a opinião faz sentido. Escrever um framework é a versão adulta de "publicar um blog post" — só que a defesa fica em <code>docs/adr/</code> e a prova, no CI verde.
+      </p>
+
+      <h2>Fechamento</h2>
+
+      <p>
+        Microsoft Agent Framework pra maioria dos casos. É a escolha segura em setembro de 2026 e provavelmente a escolha default por vários anos. O time por trás é sério, o multi-runtime é acertado, o workflow engine cobre território que agent-forge nem tenta.
+      </p>
+
+      <p>
+        <a href="https://github.com/zecabr/agent-forge">agent-forge</a> pra quem quer opinião enxuta, .NET-first, com formato BR de fábrica, eval no <code>dotnet test</code>, cost cap como parada dura. Um framework que cabe na cabeça em uma tarde e defende cada peça em 15 minutos de code review — porque isso é o que a v0.1.0-preview.2 já entrega.
+      </p>
+
+      <p>
+        Se você chegou até aqui e alguma dessas decisões te fez pensar — em qualquer direção, concordando ou não — abre uma <a href="https://github.com/zecabr/agent-forge/issues">issue</a>. Framework opinado vive de contraposição.
+      </p>
+
+      <hr />
+
+      <p class="muted">
+        <em>Este é o primeiro artigo do agent-forge. Segue a série na Semana 5 do sprint atual — a próxima nota entra em detalhes do custom stdio JSON-RPC e por que migrar pro SDK oficial v2 no v0.2 muda pouco em código de aplicação.</em>
+      </p>
+
+      <p class="muted">
+        <em>Se quiser conversar sobre o texto ou o framework, me acha no <a href="https://linkedin.com/in/…">LinkedIn</a> ou no <a href="https://github.com/zecabr">GitHub</a>. Feedback contraditório e específico é o mais útil.</em>
+      </p>
+    </article>
+
+    <SiteFooter />
+  </main>
+</BaseLayout>
+
+<style>
+  .meta {
+    font-size: var(--step--1);
+    color: var(--color-text-muted);
+    margin-top: calc(var(--space-md) * -0.5);
+    margin-bottom: var(--space-lg);
+  }
+
+  h3 {
+    margin-top: var(--space-lg);
+    color: var(--color-accent-arch);
+  }
+
+  pre {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    line-height: 1.55;
+    background: var(--color-bg-elev);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: var(--space-sm) var(--space-md);
+    overflow-x: auto;
+    margin: 0 0 var(--space-md);
+    max-width: none;
+  }
+
+  pre code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    font-size: inherit;
+  }
+</style>

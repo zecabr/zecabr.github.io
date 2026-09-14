@@ -2,6 +2,15 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
+
+const notes = [
+  {
+    slug: 'mcp-em-dotnet',
+    date: '2026-09-11',
+    title: 'MCP em .NET, seis meses depois',
+    excerpt: 'Por que construí um agent framework opinado quando o Microsoft Agent Framework 1.0 já está no ar há seis meses — e onde ele é a escolha certa.',
+  },
+];
 ---
 
 <BaseLayout
@@ -19,17 +28,68 @@ import SiteFooter from '../../components/SiteFooter.astro';
         Ensaios sobre MCP em .NET, arquitetura de agentes, event-driven, DevEx e o que os tutoriais deixam de fora.
       </p>
 
-      <p class="muted">
-        <em>O primeiro artigo sai junto com a release <code>v0.1</code> do <a href="/projetos/">agent-forge</a> —
-        planejado para a Semana 5 do sprint atual.</em>
-      </p>
+      <ul class="notes-list">
+        {notes.map((note) => (
+          <li class="note-item">
+            <time datetime={note.date}>{new Date(note.date + 'T12:00:00Z').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}</time>
+            <h2><a href={`/notas/${note.slug}/`}>{note.title}</a></h2>
+            <p>{note.excerpt}</p>
+          </li>
+        ))}
+      </ul>
 
-      <p>
-        Enquanto isso, acompanhe no <a href="https://github.com/zecabr">GitHub</a>
-        ou no <a href="https://linkedin.com/in/…">LinkedIn</a>.
+      <p class="muted">
+        Novas notas saem conforme o <a href="/projetos/">sprint</a> avança. Segue no <a href="https://github.com/zecabr">GitHub</a> e no <a href="https://linkedin.com/in/…">LinkedIn</a>.
       </p>
     </article>
 
     <SiteFooter />
   </main>
 </BaseLayout>
+
+<style>
+  .notes-list {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-lg) 0;
+    max-width: none;
+  }
+
+  .note-item {
+    padding: var(--space-md) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .note-item:last-child {
+    border-bottom: 0;
+  }
+
+  .note-item time {
+    display: block;
+    font-size: var(--step--1);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+    margin-bottom: var(--space-xs);
+  }
+
+  .note-item h2 {
+    font-size: var(--step-2);
+    margin: 0 0 var(--space-xs);
+  }
+
+  .note-item h2 a {
+    text-decoration: none;
+  }
+
+  .note-item h2 a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent-arch);
+  }
+
+  .note-item p {
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+</style>
